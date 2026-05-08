@@ -1,5 +1,8 @@
 #pragma once
 #include "../matrix/matrix.h"
 
-Vector<double> gauss_with_pivot(Matrix<double> A, Vector<double> b);
-Vector<double> gauss_without_pivot(Matrix<double> A, Vector<double> b);
+template<class T>
+Vector<T> gauss_with_pivot(Matrix<T> A, Vector<T> b);
+
+template<class T>
+Vector<T> gauss_without_pivot(Matrix<T> A, Vector<T> b);

@@ -3,9 +3,6 @@
 
 //TODO: C-7.1.3 несколько режимов хранения. Делаем Разреженную матрицу, при заполнении 10% распаковка в обычную 
 
-//TODO: матрица и вектор работают со всеми типами данных
-//TODO: начинать операторы с += *= -=, а из них + - *
-
 template<class T>
 class Matrix {
 private:
@@ -64,7 +61,7 @@ template<class T>
 Matrix<T> operator-(Matrix<T> lhs, const Matrix<T>& rhs);
 
 template<class T>
-Matrix<T> operator*(Matrix<T> lhs, const Matrix<T>& rhs);
+Matrix<T> operator*(const Matrix<T>& lhs, const Matrix<T>& rhs);
 
 // ==== ВЕКТОРА ====
 template<class T>
@@ -74,7 +71,7 @@ template<class T>
 Vector<T> operator-(Vector<T> lhs, const Vector<T>& rhs);
 
 template<class T>
-Vector<T> operator*(Vector<T> lhs, const Vector<T>& rhs);
+Vector<T> operator*(const Vector<T>& lhs, const Vector<T>& rhs);
 
 // ==== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ====
 template<class T>

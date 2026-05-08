@@ -1,9 +1,14 @@
 #pragma once
 #include "../matrix/matrix.h"
 
-void lu_decomposition(const Matrix<double>& A, Matrix<double>& L, Matrix<double>& U);
+template<class T>
+void lu_decomposition(const Matrix<T>& A, Matrix<T>& L, Matrix<T>& U);
 
-Vector<double> forward_sub(const Matrix<double>& L, const Vector<double>& b);
-Vector<double> backward_sub(const Matrix<double>& U, const Vector<double>& y);
+template<class T>
+Vector<T> forward_sub(const Matrix<T>& L, const Vector<T>& b);
 
-Vector<double> solve_lu(const Matrix<double>& L,const Matrix<double>& U, const Vector<double>& b);
+template<class T>
+Vector<T> backward_sub(const Matrix<T>& U, const Vector<T>& y);
+
+template<class T>
+Vector<T> solve_lu(const Matrix<T>& L,const Matrix<T>& U, const Vector<T>& b);

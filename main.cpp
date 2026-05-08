@@ -28,17 +28,16 @@ void menu() {
     std::cout << "3. Print matrix\n";
     std::cout << "4. Print Hilbert matrix\n";
     std::cout << "5. Print vector\n";
-    std::cout << "6. Decompose matrix with gauss\n";
-    std::cout << "7. Decompose matrix with gauss with pivot\n";
-    std::cout << "8. Decompose matrix with LU\n";
-    std::cout << "9. Run all tests\n";
+    std::cout << "6. Choose decompose\n";
+    std::cout << "7. Choose math operation";
     std::cout << "0. Quit\n";
     std::cout << "Your choice: ";
 }
 
-int main() {
-    Matrix<double> A(0), L(0), U(0), H(0);
-    Vector<double> b(0), ans(0);
+template <class T>
+void run_menu() {
+    Matrix<T> A(0), B(0), L(0), U(0), H(0), ANS(0);
+    Vector<T> a(0), b(0), ans(0);
     int dim;
     bool work = true;
     int choice;
@@ -51,9 +50,9 @@ int main() {
             case 1:
                 std::cout << "Input matrix dim: ";
                 dim = safe_input();
-                A = fill_matrix(dim);
+                A = fill_matrix<T>(dim);
                 std::cout << "\n Your matrix: \n";
-                matrix_print(A);
+                matrix_print<T>(A);
                 break;
 
             // создание вектора
@@ -61,9 +60,9 @@ int main() {
                 int len;
                 std::cout << "Input vector len: ";
                 len = safe_input();
-                b = fill_vector(len);
+                b = fill_vector<T>(len);
                 std::cout << "\n Your vector: \n";
-                vector_print(b);
+                vector_print<T>(b);
                 break;
 
             // вывод матрицы
@@ -73,7 +72,7 @@ int main() {
                     break;
                 }
 
-                matrix_print(A);
+                matrix_print<T>(A);
                 break;
 
             // создание и вывод матрицы гильберта
@@ -81,9 +80,9 @@ int main() {
                 std::cout << "Input matrix dim: ";
                 dim = safe_input(); 
                 std::cout << "\n";
-                H = create_gilbert_matrix<double>(dim);
+                H = create_gilbert_matrix<T>(dim);
                 std::cout << "\n Your matrix: \n";
-                matrix_print(H);   
+                matrix_print<T>(H);   
                 break;
 
             // вывод вектора
@@ -93,57 +92,21 @@ int main() {
                     break;
                 }
 
-                vector_print(b);
+                vector_print<T>(b);
                 break;
 
-            // гаусс без опорного элемента
-            case 6:
-                if (!A.size()) {
-                    std::cout << "Initialize matrix first\n";
-                    break;
-                }
+            // Декомпозиции
+            case 6: {
+                std::cout << "Choose decomposition method:\n";
+                std::cout << "1. Gauss without pivot\n";
+                std::cout << "2. Gauss with pivot\n";
+                std::cout << "3. LU decomposition\n";
 
-                if (!b.size()) {
-                    std::cout << "Initialize vector first\n";
-                    break;
-                }
+                int decomposition_choice = safe_input();
 
-                if (A.size() != b.size()) {
-                    std::cout << "different dims\n";
-                    break;
-                }
-
-                ans = gauss_without_pivot(A, b);
-                vector_print(ans);
-                break;
-
-            // гаусс с опорным элементом
-            case 7:
-                if (!A.size()) {
-                    std::cout << "Initialize matrix first\n";
-                    break;
-                }
-
-                if (!b.size()) {
-                    std::cout << "Initialize vector first\n";
-                    break;
-                }
-
-                if (A.size() != b.size()) {
-                    std::cout << "different dims\n";
-                    break;
-                }
-
-                ans = gauss_with_pivot(A, b);
-                vector_print(ans);
-                break;
-
-            // LU разложение
-            case 8:
-                int chc;
-                std::cout << "Solve LU or Decompose LU? (1 for solve, 2 for decompose): ";
-                std::cin >> chc;
-                if (chc == 1) {
+                switch(decomposition_choice) {
+                    case 1:
+                    // гаусс без опорного элемента
                     if (!A.size()) {
                         std::cout << "Initialize matrix first\n";
                         break;
@@ -159,43 +122,192 @@ int main() {
                         break;
                     }
 
-                    else {
-                        lu_decomposition(A, L, U);
+                    ans = gauss_without_pivot<T>(A, b);
+                    vector_print<T>(ans);
+                    break;
 
-                        std::cout << "Print LU matrices? (1 for Yes, 0 for No): ";
-                        bool print_lu = safe_bool_input();
-
-                        if (print_lu) {
-                            std::cout << "L: \n";
-                            matrix_print(L);
-                            std::cout << "U: \n";
-                            matrix_print(U);
-                        }
-                        ans = solve_lu(L, U, b);
-                        std::cout << "LU decomposition and solve completed.\n";
-                        vector_print(ans);
-                    }
-                }
-
-                if (chc == 2) {
+                case 2:
+                    // гаусс с опорным элементом
                     if (!A.size()) {
                         std::cout << "Initialize matrix first\n";
                         break;
                     }
 
-                    lu_decomposition(A, L, U);
+                    if (!b.size()) {
+                        std::cout << "Initialize vector first\n";
+                        break;
+                    }
 
-                    std::cout << "L: \n";
-                    matrix_print(L);
-                    std::cout << "U: \n";
-                    matrix_print(U);
+                    if (A.size() != b.size()) {
+                        std::cout << "different dims\n";
+                        break;
+                    }
+
+                    ans = gauss_with_pivot<T>(A, b);
+                    vector_print<T>(ans);
+                    break;
+
+                case 3:
+                    // LU разложение
+                    int chc;
+                    std::cout << "Solve LU or Decompose LU? (1 for solve, 2 for decompose): ";
+                    std::cin >> chc;
+                    if (chc == 1) {
+                        if (!A.size()) {
+                            std::cout << "Initialize matrix first\n";
+                            break;
+                        }
+
+                        if (!b.size()) {
+                            std::cout << "Initialize vector first\n";
+                            break;
+                        }
+
+                        if (A.size() != b.size()) {
+                            std::cout << "different dims\n";
+                            break;
+                        }
+
+                        else {
+                            lu_decomposition<T>(A, L, U);
+
+                            std::cout << "Print LU matrices? (1 for Yes, 0 for No): ";
+                            bool print_lu = safe_bool_input();
+
+                            if (print_lu) {
+                                std::cout << "L: \n";
+                                matrix_print<T>(L);
+                                std::cout << "U: \n";
+                                matrix_print<T>(U);
+                            }
+                            ans = solve_lu<T>(L, U, b);
+                            std::cout << "LU decomposition and solve completed.\n";
+                            vector_print<T>(ans);
+                        }
+                    }
+
+                    if (chc == 2) {
+                        if (!A.size()) {
+                            std::cout << "Initialize matrix first\n";
+                            break;
+                        }
+
+                        lu_decomposition<T>(A, L, U);
+
+                        std::cout << "L: \n";
+                        matrix_print<T>(L);
+                        std::cout << "U: \n";
+                        matrix_print<T>(U);
+                    }
+                    break;
                 }
                 break;
+            }
 
-            // тесты
-            case 9:
-                run_tests();
+            case 7: {
+                int choise_math;
+                std::cout << "Choose math operation:\n";
+                std::cout << "1. Sum of matrices\n";
+                std::cout << "2. Subtraction of matrices\n";
+                std::cout << "3. Multiplication of matrices\n";
+                std::cout << "4. Sum of vectors\n";
+                std::cout << "5. Subtraction of vectors\n";
+                std::cout << "6. Multiplication of vectors\n";
+                choise_math = safe_input();
+                switch(choise_math) {
+                    case 1:
+                        if (!A.size() || !B.size()) {
+                            std::cout << "Initialize both matrices first\n";
+                            break;
+                        }
+
+                        if (A.size() != B.size()) {
+                            std::cout << "Matrices must have the same dimensions\n";
+                            break;
+                        }
+
+                        ANS = A + B;
+                        matrix_print<T>(ANS);
+                        
+                        break;
+                    case 2:
+                        if (!A.size() || !B.size()) {
+                            std::cout << "Initialize both matrices first\n";
+                            break;
+                        }
+
+                        if (A.size() != B.size()) {
+                            std::cout << "Matrices must have the same dimensions\n";
+                            break;
+                        }
+
+                        ANS = A - B;
+                        matrix_print<T>(ANS);
+                        
+                        break;
+                    case 3:
+                        if (!A.size() || !B.size()) {
+                            std::cout << "Initialize both matrices first\n";
+                            break;
+                        }
+
+                        if (A.size() != B.size()) {
+                            std::cout << "Matrices must have the same dimensions\n";
+                            break;
+                        }
+
+                        ANS = A * B;
+                        matrix_print<T>(ANS);
+                        
+                        break;
+                    case 4:
+                        if (!a.size() || !b.size()) {
+                            std::cout << "Initialize both vectors first\n";
+                            break;
+                        }
+
+                        if (a.size() != b.size()) {
+                            std::cout << "Vectors must have the same dimensions\n";
+                            break;
+                        }
+
+                        ans = a + b;
+                        vector_print<T>(ans);
+                        
+                        break;
+                    case 5:
+                        if (!a.size() || !b.size()) {
+                            std::cout << "Initialize both vectors first\n";
+                            break;
+                        }
+
+                        if (a.size() != b.size()) {
+                            std::cout << "Vectors must have the same dimensions\n";
+                            break;
+                        }
+
+                        ans = a - b;
+                        vector_print<T>(ans);
+                        
+                        break;
+                    case 6:
+                        if (!a.size() || !b.size()) {
+                            std::cout << "Initialize both vectors first\n";
+                            break;
+                        }
+
+                        if (a.size() != b.size()) {
+                            std::cout << "Vectors must have the same dimensions\n";
+                            break;
+                        }
+
+                        ans = a * b;
+                        vector_print<T>(ans);
+                        
+                        break;
+                }
                 break;
+            }
 
             // завершение работы
             case 0:
@@ -208,5 +320,31 @@ int main() {
 
         }
     }
+}
+
+int main() {
+    std::cout << "Выберите тип данных:\n";
+    std::cout << "1. int\n";
+    std::cout << "2. double\n";
+    std::cout << "3. run all tests\n";
+    std::cout << "Ваш выбор: ";
+    
+    int type_choice;
+    std::cin >> type_choice;
+    
+    switch (type_choice) {
+        case 1:
+            run_menu<int>();
+            break;
+        case 2:
+            run_menu<double>();
+            break;
+        case 3:
+            run_tests();
+            break;
+        default:
+            std::cout << "Неверный выбор!\n";
+    }
+    
     return 0;
 }

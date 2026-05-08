@@ -19,13 +19,13 @@ void first_test() {
 
         // гаусово разложение с опорным элементом
         auto start = std::chrono::high_resolution_clock::now();
-        gauss_with_pivot(A, b);
+        gauss_with_pivot<double>(A, b);
         auto end = std::chrono::high_resolution_clock::now();
         double time_with_pivot = std::chrono::duration<double>(end - start).count();
 
         // гаусово разложение без опорного элемента
         start = std::chrono::high_resolution_clock::now();
-        gauss_without_pivot(A, b);
+        gauss_without_pivot<double>(A, b);
         end = std::chrono::high_resolution_clock::now();
         double time_without_pivot = std::chrono::duration<double>(end - start).count();
 
@@ -33,13 +33,13 @@ void first_test() {
         Matrix<double> L(size);
         Matrix<double> U(size);
         start = std::chrono::high_resolution_clock::now();
-        lu_decomposition(A, L, U);
+        lu_decomposition<double>(A, L, U);
         end = std::chrono::high_resolution_clock::now();
         double time_LU_decompos  = std::chrono::duration<double>(end - start).count();
 
         // решение системы с помощью LU разложения
         start = std::chrono::high_resolution_clock::now();
-        solve_lu(L, U, b);
+        solve_lu<double>(L, U, b);
         end = std::chrono::high_resolution_clock::now();
         double time_LU_solve  = std::chrono::duration<double>(end - start).count();
 
@@ -80,7 +80,7 @@ void second_test() {
         IEnumerator<Vector<double>>* it_b1 = b_vectors.GetEnumerator();
         while (it_b1->MoveNext()) {
             auto b = it_b1->Current();
-            gauss_with_pivot(A, b);
+            gauss_with_pivot<double>(A, b);
         }
         delete it_b1;
 
@@ -92,12 +92,12 @@ void second_test() {
 
         Matrix<double> L(n), U(n);
 
-        lu_decomposition(A, L, U);
+        lu_decomposition<double>(A, L, U);
 
         IEnumerator<Vector<double>>* it_b2 = b_vectors.GetEnumerator();
         while (it_b2->MoveNext()) {
             auto b = it_b2->Current();
-            solve_lu(L, U, b);
+            solve_lu<double>(L, U, b);
         }
         delete it_b2;
 
@@ -147,7 +147,7 @@ void third_test() {
         // гаусово разложение с опорным элементом
         bool with_pivot = true;
         try {
-            x_with_pivot = gauss_with_pivot(G, b);
+            x_with_pivot = gauss_with_pivot<double>(G, b);
         }
 
         catch (...) {
@@ -158,8 +158,8 @@ void third_test() {
         bool lu = true;
         Matrix<double> L(n), U(n);
         try {
-            lu_decomposition(G, L, U);
-            x_lu = solve_lu(L, U, b);
+            lu_decomposition<double>(G, L, U);
+            x_lu = solve_lu<double>(L, U, b);
         }
 
         catch (...) {
