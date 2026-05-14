@@ -42,6 +42,6 @@ double rel_error(const Vector<double> &x_exact, const Vector<double> &x_approx) 
 }
 
 // норма невязки
-double calc_res(const Matrix<double> &A, const Vector<double> &x_approx, const Vector<double> &b) {
+double calc_res(const IMatrix<double> &A, const Vector<double> &x_approx, const Vector<double> &b) {
     return vector_norm(vector_sub(matrix_by_vector(A, x_approx), b));
 }

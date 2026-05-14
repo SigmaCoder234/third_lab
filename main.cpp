@@ -5,20 +5,27 @@
 #include "decompositions/LU.h"
 #include "tests/tests.h"
 #include "hand_work/hand_work.h"
+#include "matrix/IMatrix.h"
 #include "matrix/matrix.h"
-
-//TODO: сделать сдек дек очередь
+#include "matrix/Vector.h"
+#include "matrix/MatrixOperations.h"
 
 void run_tests() {
-    std::cout << "============= TESTS STARTED ==========\n";
+    std::cout << "============= PERFORMANCE TESTS ==========\n";
     auto start = std::chrono::high_resolution_clock::now();
     first_test();
     second_test();
     third_test();
     auto end = std::chrono::high_resolution_clock::now();
     double res  = std::chrono::duration<double>(end - start).count();
-    std::cout << "\n============= TESTS ENDED =============\n";
-    std::cout << "\nALL TESTS TOOK " << res << " SECONDS\n";
+    std::cout << "\nPERFORMANCE TESTS TOOK " << res << " SECONDS\n";
+
+    std::cout << "\n============= GTEST UNIT TESTS ==========\n";
+    int gtest_result = system("run_gtests.exe");
+    if (gtest_result != 0) {
+        gtest_result = system(".\\build\\run_gtests.exe");
+    }
+    std::cout << "\n============= ALL TESTS ENDED =============\n";
 }
 
 void menu() {
@@ -26,76 +33,186 @@ void menu() {
     std::cout << "1. Create matrix\n";
     std::cout << "2. Create vector\n";
     std::cout << "3. Print matrix\n";
-    std::cout << "4. Print Hilbert matrix\n";
-    std::cout << "5. Print vector\n";
+    std::cout << "4. Print vector\n";
+    std::cout << "5. Create and print Hilbert matrix\n";
     std::cout << "6. Choose decompose\n";
-    std::cout << "7. Choose math operation";
+    std::cout << "7. Choose math operation\n";
     std::cout << "0. Quit\n";
     std::cout << "Your choice: ";
 }
 
 template <class T>
+IMatrix<T>** get_matrix_ptr(IMatrix<T>* &A, IMatrix<T>* &B, const std::string& prompt = "Which matrix? (1 for A, 2 for B): ") {
+    std::cout << prompt;
+    int choice = safe_input();
+    if (choice == 1) return &A;
+    if (choice == 2) return &B;
+    std::cout << "Invalid choice\n";
+    return nullptr;
+}
+
+template <class T>
+Vector<T>* get_vector_ptr(Vector<T>& a, Vector<T>& b, const std::string& prompt = "Which vector? (1 for a, 2 for b): ") {
+    std::cout << prompt;
+    int choice = safe_input();
+    if (choice == 1) return &a;
+    if (choice == 2) return &b;
+    std::cout << "Invalid choice\n";
+    return nullptr;
+}
+
+template <class T>
+IMatrix<T>* create_matrix_interactive() {
+    std::cout << "Select matrix type:\n";
+    std::cout << "1. Square Matrix\n";
+    std::cout << "2. Rectangular Matrix\n";
+    std::cout << "3. Diagonal Matrix\n";
+    std::cout << "4. Sparse Matrix\n";
+    std::cout << "Your choice: ";
+    int choice = safe_input();
+
+    int rows, cols;
+    switch(choice) {
+        case 1: {
+            std::cout << "Input matrix size (N for NxN): ";
+            rows = safe_input();
+            return new SquareMatrix<T>(rows);
+        }
+        case 2: {
+            std::cout << "Input rows: ";
+            rows = safe_input();
+            std::cout << "Input cols: ";
+            cols = safe_input();
+            return new RectangularMatrix<T>(rows, cols);
+        }
+        case 3: {
+            std::cout << "Input matrix size (N for NxN diagonal): ";
+            rows = safe_input();
+            return new DiagonalMatrix<T>(rows);
+        }
+        case 4: {
+            std::cout << "Input rows: ";
+            rows = safe_input();
+            std::cout << "Input cols: ";
+            cols = safe_input();
+            return new SparseMatrix<T>(rows, cols);
+        }
+        default:
+            std::cout << "Invalid choice, defaulting to Square Matrix.\n";
+            std::cout << "Input matrix size (N for NxN): ";
+            rows = safe_input();
+            return new SquareMatrix<T>(rows);
+    }
+}
+
+template <class T>
+void handle_gauss(IMatrix<T>* A, IMatrix<T>* B, Vector<T>& a, Vector<T>& b, Vector<T>& ans, Vector<T> (*gauss_func)(const IMatrix<T>&, Vector<T>)) {
+    std::cout << "Choose matrix for decompose: (1 for A and 2 for B)\n";
+    int choice = safe_input();
+    IMatrix<T>* m = (choice == 1 ? A : (choice == 2 ? B : nullptr));
+    
+    if (!m) { std::cout << "Invalid choice or matrix not initialized\n"; return; }
+    if (m->get_rows() == 0) { std::cout << "Initialize matrix first\n"; return; }
+
+    Vector<T>* v = get_vector_ptr(a, b, "Choose vector for decompose: (1 for a and 2 for b)\n");
+    if (!v) return;
+    if (v->size() == 0) { std::cout << "Initialize vector first\n"; return; }
+
+    if (m->get_rows() != v->size()) {
+        std::cout << "different dims\n";
+        return;
+    }
+
+    ans = gauss_func(*m, *v);
+    std::cout << "Result: \n";
+    vector_print<T>(ans);
+}
+
+template <class T>
 void run_menu() {
-    Matrix<T> A(0), B(0), L(0), U(0), H(0), ANS(0);
+    IMatrix<T>* A = nullptr;
+    IMatrix<T>* B = nullptr;
+    IMatrix<T>* ANS = nullptr;
+    
+    SquareMatrix<T> L(0), U(0), H(0);
     Vector<T> a(0), b(0), ans(0);
-    int dim;
+    
+    int rows, cols, chc;
     bool work = true;
     int choice;
+    
     while (work) {
         menu();
         choice = safe_input();
         switch (choice) {
-
-            // создание матрицы
-            case 1:
-                std::cout << "Input matrix dim: ";
-                dim = safe_input();
-                A = fill_matrix<T>(dim);
-                std::cout << "\n Your matrix: \n";
-                matrix_print<T>(A);
-                break;
-
-            // создание вектора
-            case 2: 
-                int len;
-                std::cout << "Input vector len: ";
-                len = safe_input();
-                b = fill_vector<T>(len);
-                std::cout << "\n Your vector: \n";
-                vector_print<T>(b);
-                break;
-
-            // вывод матрицы
-            case 3:
-                if (!A.size()) {
-                    std::cout << "Initialize matrix first\n";
-                    break;
+            case 1: {
+                IMatrix<T>** m_ptr = get_matrix_ptr(A, B, "Which matrix you want to initialize? (1 for A and 2 for B)\n");
+                if (m_ptr) {
+                    if (*m_ptr) delete *m_ptr;
+                    *m_ptr = create_matrix_interactive<T>();
+                    fill_matrix_values(**m_ptr, (m_ptr == &A ? "A" : "B"));
+                    
+                    std::cout << "\n Your matrix: \n";
+                    matrix_print<T>(**m_ptr);
                 }
-
-                matrix_print<T>(A);
                 break;
+            }
 
-            // создание и вывод матрицы гильберта
-            case 4:
+            case 2: {
+                Vector<T>* v = get_vector_ptr(a, b, "Which vector you want to initialize? (1 for a and 2 for b)\n");
+                if (v) {
+                    std::cout << "Input vector dim: ";
+                    int dim = safe_input();
+                    *v = fill_vector<T>(dim, (v == &a ? "a" : "b"));
+                    std::cout << "\n Your vector: \n";
+                    vector_print<T>(*v);
+                }
+                break;
+            }
+
+            case 3: {
+                std::cout << "Which matrix you want to print? (1 for A, 2 for B, 3 for ANS): ";
+                int p_chc = safe_input();
+                IMatrix<T>* m = nullptr;
+                if (p_chc == 1) m = A;
+                else if (p_chc == 2) m = B;
+                else if (p_chc == 3) m = ANS;
+                
+                if (m) {
+                    if (m->get_rows() == 0) {
+                        std::cout << "Matrix is empty\n";
+                    } else {
+                        std::cout << "\n Your matrix: \n";
+                        matrix_print<T>(*m);
+                    }
+                } else {
+                    std::cout << "Matrix not initialized\n";
+                }
+                break;
+            }
+
+            case 4: {
+                Vector<T>* v = get_vector_ptr(a, b, "Which vector you want to print? (1 for a and 2 for b)\n");
+                if (v) {
+                    if (v->size() == 0) {
+                        std::cout << "Initialize vector first\n";
+                    } else {
+                        std::cout << "\n Your vector: \n";
+                        vector_print<T>(*v);
+                    }
+                }
+                break;
+            }
+
+            case 5:
                 std::cout << "Input matrix dim: ";
-                dim = safe_input(); 
+                rows = safe_input(); 
                 std::cout << "\n";
-                H = create_gilbert_matrix<T>(dim);
+                H = create_gilbert_matrix<T>(rows);
                 std::cout << "\n Your matrix: \n";
                 matrix_print<T>(H);   
                 break;
 
-            // вывод вектора
-            case 5:
-                if (!b.size()) {
-                    std::cout << "Initialize vector first\n";
-                    break;
-                }
-
-                vector_print<T>(b);
-                break;
-
-            // Декомпозиции
             case 6: {
                 std::cout << "Choose decomposition method:\n";
                 std::cout << "1. Gauss without pivot\n";
@@ -106,231 +223,108 @@ void run_menu() {
 
                 switch(decomposition_choice) {
                     case 1:
-                    // гаусс без опорного элемента
-                    if (!A.size()) {
-                        std::cout << "Initialize matrix first\n";
+                        handle_gauss<T>(A, B, a, b, ans, gauss_without_pivot<T>);
                         break;
-                    }
-
-                    if (!b.size()) {
-                        std::cout << "Initialize vector first\n";
+                    case 2:
+                        handle_gauss<T>(A, B, a, b, ans, gauss_with_pivot<T>);
                         break;
-                    }
+                    case 3: {
+                        std::cout << "Solve LU or Decompose LU? (1 for solve, 2 for decompose): ";
+                        chc = safe_input();
 
-                    if (A.size() != b.size()) {
-                        std::cout << "different dims\n";
-                        break;
-                    }
+                        IMatrix<T>** m_ptr = get_matrix_ptr(A, B, "Choose matrix: (1 for A and 2 for B)\n");
+                        if (!m_ptr || !*m_ptr) break;
 
-                    ans = gauss_without_pivot<T>(A, b);
-                    vector_print<T>(ans);
-                    break;
-
-                case 2:
-                    // гаусс с опорным элементом
-                    if (!A.size()) {
-                        std::cout << "Initialize matrix first\n";
-                        break;
-                    }
-
-                    if (!b.size()) {
-                        std::cout << "Initialize vector first\n";
-                        break;
-                    }
-
-                    if (A.size() != b.size()) {
-                        std::cout << "different dims\n";
-                        break;
-                    }
-
-                    ans = gauss_with_pivot<T>(A, b);
-                    vector_print<T>(ans);
-                    break;
-
-                case 3:
-                    // LU разложение
-                    int chc;
-                    std::cout << "Solve LU or Decompose LU? (1 for solve, 2 for decompose): ";
-                    std::cin >> chc;
-                    if (chc == 1) {
-                        if (!A.size()) {
-                            std::cout << "Initialize matrix first\n";
-                            break;
-                        }
-
-                        if (!b.size()) {
-                            std::cout << "Initialize vector first\n";
-                            break;
-                        }
-
-                        if (A.size() != b.size()) {
-                            std::cout << "different dims\n";
-                            break;
-                        }
-
-                        else {
-                            lu_decomposition<T>(A, L, U);
-
-                            std::cout << "Print LU matrices? (1 for Yes, 0 for No): ";
-                            bool print_lu = safe_bool_input();
-
-                            if (print_lu) {
-                                std::cout << "L: \n";
-                                matrix_print<T>(L);
-                                std::cout << "U: \n";
-                                matrix_print<T>(U);
+                        if (chc == 1) { // Solve
+                            Vector<T>* v = get_vector_ptr(a, b, "Choose vector: (1 for a and 2 for b)\n");
+                            if (!v || v->size() == 0) break;
+                            if ((*m_ptr)->get_rows() != v->size()) {
+                                std::cout << "different dims\n";
+                                break;
                             }
-                            ans = solve_lu<T>(L, U, b);
-                            std::cout << "LU decomposition and solve completed.\n";
+                            lu_decomposition<T>(**m_ptr, L, U);
+                            ans = solve_lu<T>(L, U, *v);
+                            std::cout << "Result: \n";
                             vector_print<T>(ans);
+                        } else if (chc == 2) { // Decompose
+                            lu_decomposition<T>(**m_ptr, L, U);
+                            std::cout << "L: \n"; matrix_print<T>(L);
+                            std::cout << "U: \n"; matrix_print<T>(U);
                         }
+                        break;
                     }
-
-                    if (chc == 2) {
-                        if (!A.size()) {
-                            std::cout << "Initialize matrix first\n";
-                            break;
-                        }
-
-                        lu_decomposition<T>(A, L, U);
-
-                        std::cout << "L: \n";
-                        matrix_print<T>(L);
-                        std::cout << "U: \n";
-                        matrix_print<T>(U);
-                    }
-                    break;
                 }
                 break;
             }
 
             case 7: {
-                int choise_math;
                 std::cout << "Choose math operation:\n";
-                std::cout << "1. Sum of matrices\n";
-                std::cout << "2. Subtraction of matrices\n";
-                std::cout << "3. Multiplication of matrices\n";
-                std::cout << "4. Sum of vectors\n";
-                std::cout << "5. Subtraction of vectors\n";
-                std::cout << "6. Multiplication of vectors\n";
-                choise_math = safe_input();
-                switch(choise_math) {
-                    case 1:
-                        if (!A.size() || !B.size()) {
-                            std::cout << "Initialize both matrices first\n";
+                std::cout << "1. Sum of matrices (A + B)\n";
+                std::cout << "2. Subtraction of matrices (A - B)\n";
+                std::cout << "3. Multiplication of matrices (A * B)\n";
+                std::cout << "4. Sum of vectors (a + b)\n";
+                std::cout << "5. Subtraction of vectors (a - b)\n";
+                std::cout << "6. Multiplication of vectors (a * b)\n";
+                int math_choice = safe_input();
+                
+                try {
+                    switch(math_choice) {
+                        case 1:
+                            if (!A || !B) throw std::runtime_error("Initialize both matrices");
+                            if (ANS) delete ANS;
+                            ANS = new RectangularMatrix<T>(*A + *B);
+                            matrix_print<T>(*ANS);
                             break;
-                        }
-
-                        if (A.size() != B.size()) {
-                            std::cout << "Matrices must have the same dimensions\n";
+                        case 2:
+                            if (!A || !B) throw std::runtime_error("Initialize both matrices");
+                            if (ANS) delete ANS;
+                            ANS = new RectangularMatrix<T>(*A - *B);
+                            matrix_print<T>(*ANS);
                             break;
-                        }
-
-                        ANS = A + B;
-                        matrix_print<T>(ANS);
-                        
-                        break;
-                    case 2:
-                        if (!A.size() || !B.size()) {
-                            std::cout << "Initialize both matrices first\n";
+                        case 3:
+                            if (!A || !B) throw std::runtime_error("Initialize both matrices");
+                            if (ANS) delete ANS;
+                            ANS = new RectangularMatrix<T>(*A * *B);
+                            matrix_print<T>(*ANS);
                             break;
-                        }
-
-                        if (A.size() != B.size()) {
-                            std::cout << "Matrices must have the same dimensions\n";
+                        case 4:
+                            ans = a + b;
+                            vector_print<T>(ans);
                             break;
-                        }
-
-                        ANS = A - B;
-                        matrix_print<T>(ANS);
-                        
-                        break;
-                    case 3:
-                        if (!A.size() || !B.size()) {
-                            std::cout << "Initialize both matrices first\n";
+                        case 5:
+                            ans = a - b;
+                            vector_print<T>(ans);
                             break;
-                        }
-
-                        if (A.size() != B.size()) {
-                            std::cout << "Matrices must have the same dimensions\n";
+                        case 6:
+                            ans = a * b;
+                            vector_print<T>(ans);
                             break;
-                        }
-
-                        ANS = A * B;
-                        matrix_print<T>(ANS);
-                        
-                        break;
-                    case 4:
-                        if (!a.size() || !b.size()) {
-                            std::cout << "Initialize both vectors first\n";
-                            break;
-                        }
-
-                        if (a.size() != b.size()) {
-                            std::cout << "Vectors must have the same dimensions\n";
-                            break;
-                        }
-
-                        ans = a + b;
-                        vector_print<T>(ans);
-                        
-                        break;
-                    case 5:
-                        if (!a.size() || !b.size()) {
-                            std::cout << "Initialize both vectors first\n";
-                            break;
-                        }
-
-                        if (a.size() != b.size()) {
-                            std::cout << "Vectors must have the same dimensions\n";
-                            break;
-                        }
-
-                        ans = a - b;
-                        vector_print<T>(ans);
-                        
-                        break;
-                    case 6:
-                        if (!a.size() || !b.size()) {
-                            std::cout << "Initialize both vectors first\n";
-                            break;
-                        }
-
-                        if (a.size() != b.size()) {
-                            std::cout << "Vectors must have the same dimensions\n";
-                            break;
-                        }
-
-                        ans = a * b;
-                        vector_print<T>(ans);
-                        
-                        break;
+                    }
+                } catch (const std::exception& e) {
+                    std::cout << "Error: " << e.what() << "\n";
                 }
                 break;
             }
 
-            // завершение работы
             case 0:
                 work = false;
                 break;
-
-            default:
-                printf("\nInvalid menu option. Please try again.\n");
-                break;
-
         }
     }
+    if (A) delete A;
+    if (B) delete B;
+    if (ANS) delete ANS;
 }
 
 int main() {
-    std::cout << "Выберите тип данных:\n";
+    std::cout << "Choose data type or run tests:\n";
     std::cout << "1. int\n";
     std::cout << "2. double\n";
     std::cout << "3. run all tests\n";
-    std::cout << "Ваш выбор: ";
+    std::cout << "Your choice: ";
     
     int type_choice;
-    std::cin >> type_choice;
+    if (!(std::cin >> type_choice)) return 0;
     
     switch (type_choice) {
         case 1:
@@ -343,7 +337,7 @@ int main() {
             run_tests();
             break;
         default:
-            std::cout << "Неверный выбор!\n";
+            std::cout << "Invalid choice!\n";
     }
     
     return 0;

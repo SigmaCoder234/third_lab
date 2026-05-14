@@ -14,7 +14,7 @@ void first_test() {
     //TODO: сделать фиксированное прирощение и останавливаться, когда время > 1 минуты
     int size = 100;
     while (size <= 1000) {
-        Matrix<double> A = create_matrix<double>(size);
+        SquareMatrix<double> A = create_matrix<double>(size);
         Vector<double> b = create_vector<double>(size);
 
         // гаусово разложение с опорным элементом
@@ -30,8 +30,8 @@ void first_test() {
         double time_without_pivot = std::chrono::duration<double>(end - start).count();
 
         // разложение матрицы LU
-        Matrix<double> L(size);
-        Matrix<double> U(size);
+        SquareMatrix<double> L(size);
+        SquareMatrix<double> U(size);
         start = std::chrono::high_resolution_clock::now();
         lu_decomposition<double>(A, L, U);
         end = std::chrono::high_resolution_clock::now();
@@ -64,7 +64,7 @@ void second_test() {
     int size[] = {1, 10, 100};
     DynamicArray<int> sizes(size, 3);
 
-    Matrix<double> A = create_matrix<double>(n);
+    SquareMatrix<double> A = create_matrix<double>(n);
     IEnumerator<int>* it_sizes = sizes.GetEnumerator();
     while (it_sizes->MoveNext()) {
         int k = it_sizes->Current();
@@ -90,7 +90,7 @@ void second_test() {
         // LU test
         start = std::chrono::high_resolution_clock::now();
 
-        Matrix<double> L(n), U(n);
+        SquareMatrix<double> L(n), U(n);
 
         lu_decomposition<double>(A, L, U);
 
@@ -121,7 +121,7 @@ void third_test() {
     IEnumerator<int>* it_sizes = sizes.GetEnumerator();
     while (it_sizes->MoveNext()) {
         int n = it_sizes->Current();
-        Matrix<double> G = create_gilbert_matrix<double>(n);
+        SquareMatrix<double> G = create_gilbert_matrix<double>(n);
         Vector<double> x_exact(n);
         for (int i = 0; i < n; i++) {
             x_exact[i] = 1.0;
@@ -156,7 +156,7 @@ void third_test() {
 
         // LU разложение
         bool lu = true;
-        Matrix<double> L(n), U(n);
+        SquareMatrix<double> L(n), U(n);
         try {
             lu_decomposition<double>(G, L, U);
             x_lu = solve_lu<double>(L, U, b);
