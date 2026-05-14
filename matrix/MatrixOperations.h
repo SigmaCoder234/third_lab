@@ -3,7 +3,6 @@
 #include "RectangularMatrix.h"
 #include "Vector.h"
 #include "SquareMatrix.h"
-#include <cstdlib>
 
 template<class T>
 RectangularMatrix<T> operator+(const IMatrix<T>& lhs, const IMatrix<T>& rhs) {

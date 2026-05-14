@@ -24,7 +24,7 @@ FetchContent_Declare(
   googletest
   URL https://github.com/google/googletest/archive/refs/tags/release-1.11.0.zip
 )
-# For Windows: Prevent overriding the parent project's compiler/linker settings
+
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 set(gtest_disable_pthreads ON CACHE BOOL "" FORCE)
 add_compile_options(-U__STRICT_ANSI__)

@@ -49,7 +49,7 @@ public:
         int idx = find_element(i, j);
         if (idx != -1) return elements[idx].value;
         
-        // Add new element
+        // добавление нового элемента
         if (count == elements.size()) {
             elements.ReSize(elements.size() * 2 + 1);
         }

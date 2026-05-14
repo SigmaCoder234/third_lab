@@ -47,10 +47,6 @@ void fill_matrix_values(IMatrix<T>& A, const std::string& name) {
                 std::cout << name << "[" << i+1 << "][" << j+1 << "] = ";
                 A(i, j) = (T)safe_double_input();
             } catch (const std::exception& e) {
-                // For DiagonalMatrix it might throw if non-diagonal is accessed
-                // In that case we just skip or set to 0 (though it should already be 0)
-                // Actually, IMatrix user should know which elements to fill.
-                // But for general fill, we might want to skip non-modifiable elements.
             }
         }
     }

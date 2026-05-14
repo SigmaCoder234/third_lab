@@ -37,7 +37,7 @@ TEST(VectorTest, Multiplication) {
     v1[0] = 1; v1[1] = 2; v1[2] = 3;
     v2[0] = 4; v2[1] = 5; v2[2] = 6;
     
-    auto v3 = v1 * v2; // element-wise multiplication
+    auto v3 = v1 * v2;
     EXPECT_EQ(v3[0], 4);
     EXPECT_EQ(v3[1], 10);
     EXPECT_EQ(v3[2], 18);

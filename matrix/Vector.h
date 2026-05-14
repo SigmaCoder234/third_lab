@@ -9,7 +9,6 @@ public:
         for (int i = 0; i < len; i++) (*this)[i] = T();
     }
     
-    // Copy constructor from base
     Vector(const DynamicArray<T>& other) : DynamicArray<T>(other) {}
 
     Vector<T>& operator+=(const Vector<T>& other) {

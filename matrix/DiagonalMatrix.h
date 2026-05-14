@@ -17,7 +17,6 @@ public:
         if (other.get_rows() != other.get_cols()) throw std::invalid_argument("Matrix is not square");
         for (int i = 0; i < dim; i++) {
             data[i] = other(i, i);
-            // Optionally check if other elements are zero, but here we just take the diagonal
         }
     }
 
